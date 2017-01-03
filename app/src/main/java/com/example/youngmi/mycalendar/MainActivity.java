@@ -17,17 +17,15 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import java.util.Calendar;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private final static String TAG = MainActivity.class.getName();
 
-    private Calendar mCalendar;
-    private List<TextView> mDayTextViewList;
     private TextView mTitle;
     private ViewPager mCalendarPager;
+    private int mStartIndex = Integer.MAX_VALUE / 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,38 +52,41 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        mCalendarPager = (ViewPager) findViewById(R.id.pager_calendar);
-        mCalendarPager.setAdapter(new CalendarPagerAdapter(this));
-
-
         mTitle = (TextView) findViewById(R.id.text_year_and_month);
 
-//        mDayTextViewList = new ArrayList<>();
-//        Resources res = getResources();
-//        int resID;
-//        TextView tv;
-//
-//        for(int r=0; r<6; r++) {
-//            for(int c=0; c<7; c++) {
-//                resID = res.getIdentifier("calendar_" + r + "_" + c, "id", "com.example.youngmi.mycalendar");
-//                if(resID != 0) {
-//                    tv = (TextView) findViewById(resID);
-////                    tv.setText(r + "," + c);
-//                    mDayTextViewList.add(tv);
-//                }
-//            }
-//        }
-//
-//
-//        mCalendar = Calendar.getInstance();
-//        drawCalendar();
+        mCalendarPager = (ViewPager) findViewById(R.id.pager_calendar);
+        mCalendarPager.setAdapter(new CalendarPagerAdapter(this, mStartIndex));
+        mCalendarPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                int monthCount = position - mStartIndex;
+                Calendar calendar = Calendar.getInstance();
+                calendar.add(Calendar.MONTH, monthCount);
+
+                int year = calendar.get(Calendar.YEAR);
+                int month = calendar.get(Calendar.MONTH)+1;
+                mTitle.setText(year + "년 " + month + "월");
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
+        mCalendarPager.setCurrentItem(mStartIndex);
+
+
 
         Button beforeButton = (Button) findViewById(R.id.btn_before_month);
         beforeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mCalendar.add(Calendar.MONTH, -1);
-                drawCalendar();
+                mCalendarPager.setCurrentItem(mCalendarPager.getCurrentItem()-1, true);
             }
         });
 
@@ -93,41 +94,9 @@ public class MainActivity extends AppCompatActivity
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mCalendar.add(Calendar.MONTH, 1);
-                drawCalendar();
+                mCalendarPager.setCurrentItem(mCalendarPager.getCurrentItem()+1, true);
             }
         });
-    }
-
-    private void drawCalendar() {
-        int year = mCalendar.get(Calendar.YEAR);
-        int month = mCalendar.get(Calendar.MONTH)+1;
-        mTitle.setText(year + "년 " + month + "월");
-
-        int today = mCalendar.get(Calendar.DAY_OF_MONTH);
-        mCalendar.set(Calendar.DAY_OF_MONTH, 1);
-
-        int startPoint = mCalendar.get(Calendar.DAY_OF_WEEK) - 1;
-        int maxMonth = mCalendar.getActualMaximum(Calendar.DATE);
-        TextView tv;
-        int index = 0;
-
-        for(;index < startPoint; index++) {
-            tv = mDayTextViewList.get(index);
-            tv.setText("");
-        }
-
-        for(; index < startPoint+maxMonth; index++) {
-            tv = mDayTextViewList.get(index);
-            tv.setText(String.valueOf(index-startPoint+1));
-        }
-
-        for(;index < mDayTextViewList.size(); index++) {
-            tv = mDayTextViewList.get(index);
-            tv.setText("");
-        }
-
-        mCalendar.set(Calendar.DAY_OF_MONTH, today);
     }
 
     @Override
